@@ -10,9 +10,17 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: 8.7 }
-      - run: |
-          unzip -q ChelaAI.zip
-          cd ChelaAI
+      - name: Build
+        run: |
+          ls -R | head -40
+          Z=$(find . -name "ChelaAI.zip" | head -1)
+          if [ -n "$Z" ]; then mkdir -p /tmp/src && unzip -q "$Z" -d /tmp/src; D=/tmp/src; else D=.; fi
+          P=$(dirname "$(find "$D" -name settings.gradle.kts | head -1)")
+          cd "$P"
           gradle assembleDebug --no-daemon
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp "$(find . -name app-debug.apk | head -1)" "$GITHUB_WORKSPACE/out/"
       - uses: actions/upload-artifact@v4
-        with: { name: CHELA-APK, path: ChelaAI/app/build/outputs/apk/debug/app-debug.apk }
+        with:
+          name: CHELA-APK
+          path: out/app-debug.apk
